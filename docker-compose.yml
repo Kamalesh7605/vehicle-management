@@ -1,0 +1,68 @@
+# FleetMate: MySQL + Quarkus backend + React frontend.
+# Start everything with:  docker compose up --build
+# Values come from a local .env file (copy .env.example); every variable has a development default.
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: fleetmate-mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fleetmate}
+      MYSQL_USER: ${MYSQL_USER:-fleetmate}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fleetmate}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: ${TZ:-Asia/Kolkata}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: fleetmate-backend
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-fleetmate}
+      DB_USER: ${MYSQL_USER:-fleetmate}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-fleetmate}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      # 32+ characters. If empty, a random secret is used and everyone is signed out on each backend restart.
+      JWT_SECRET: ${JWT_SECRET:-}
+      STORAGE_DIR: /data/uploads
+      TZ: ${TZ:-Asia/Kolkata}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/data/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # The browser calls the backend directly, so this must be reachable from the user's machine.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api}
+    container_name: fleetmate-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  uploads_data:

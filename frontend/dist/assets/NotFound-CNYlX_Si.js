@@ -1,0 +1,1 @@
+import{j as o,$ as t}from"./mui-CnCEozXa.js";import{L as n}from"./react-BDczOiZU.js";import{E as e}from"./EmptyState-H1StQ5h6.js";function s(){return o.jsx(e,{title:"Page not found",message:"The page you are looking for does not exist.",children:o.jsx(t,{component:n,to:"/",variant:"contained",children:"Back to dashboard"})})}export{s as NotFound};

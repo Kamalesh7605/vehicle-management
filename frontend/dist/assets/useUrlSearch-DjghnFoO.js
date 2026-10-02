@@ -1,0 +1,1 @@
+import{r as o}from"./mui-CnCEozXa.js";import{d as c}from"./react-BDczOiZU.js";function p(){const[a,r]=c(),t=a.get("q")??"",e=o.useCallback(s=>r(s?{q:s}:{},{replace:!0}),[r]);return[t,e]}export{p as u};
